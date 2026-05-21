@@ -1,0 +1,10 @@
+{
+  "binaries": [
+    {"path": "../repo-binaries/build/binary-demo"}
+  ],
+  "libs": [
+    {"path": "../repo-lib1/build/libplugin_one.so"},
+    {"path": "../repo-lib2/build/libplugin_two.so"}
+  ],
+  "configs": []
+}

@@ -1,0 +1,13 @@
+name: package
+on:
+  workflow_dispatch:
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 scripts/packager.py config/manifest.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: packaged-app
+          path: output/app.tar.gz
