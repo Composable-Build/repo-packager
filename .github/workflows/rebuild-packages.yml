@@ -17,6 +17,17 @@ jobs:
   rebuild:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - run: echo "rebuild packages ${{ github.event.client_payload.repo }}"
-      - run: python3 scripts/rebuild_packages.py --repo "${{ github.event.client_payload.repo }}" --tag "${{ github.event.client_payload.tag }}"
+      - name: Checkout repo-packager
+        uses: actions/checkout@v4
+        with:
+          repository: Composable-Build/repo-packager
+          token: ${{ secrets.PACKAGER_TOKEN }}
+          path: repo-packager
+
+      - name: Echo
+        run: echo "rebuild packages ${{ github.event.client_payload.repo }}"
+
+      - name: Rebuild packages
+        run: python3 scripts/rebuild_packages.py --repo "${{ github.event.client_payload.repo }}" --tag "${{ github.event.client_payload.tag }}"
+        working-directory: repo-packager
+  
