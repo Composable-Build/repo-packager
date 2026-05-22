@@ -1,0 +1,22 @@
+name: rebuild-packages
+
+on:
+  workflow_call:
+    inputs:
+      target:
+        required: false
+        type: string
+      ref:
+        required: false
+        type: string
+    secrets:
+      PACKAGER_TOKEN:
+        required: true
+
+jobs:
+  rebuild:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: echo "rebuild packages"
+      
