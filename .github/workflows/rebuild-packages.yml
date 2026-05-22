@@ -18,5 +18,5 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: echo "rebuild packages"
-      
+      - run: echo "rebuild packages ${{ github.event.client_payload.repo }}"
+      - run: python3 scripts/rebuild_packages.py --repo "${{ github.event.client_payload.repo }}" --tag "${{ github.event.client_payload.tag }}"
