@@ -1,0 +1,7 @@
+{
+  "binaries": [
+    { "path": "artifacts/repo-bin2/binary_two", "repo": "repo-bin2" }
+  ],
+  "libs": [],
+  "configs": []
+}
