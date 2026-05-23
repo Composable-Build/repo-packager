@@ -3,11 +3,11 @@ name: rebuild-packages
 on:
   workflow_call:
     inputs:
-      target:
-        required: false
+      repo:
+        required: true
         type: string
-      ref:
-        required: false
+      tag:
+        required: true
         type: string
     secrets:
       PACKAGER_TOKEN:
@@ -24,14 +24,8 @@ jobs:
           token: ${{ secrets.PACKAGER_TOKEN }}
           path: repo-packager
 
-      - name: Verify checkout
-        run: |
-          pwd
-          ls -la
-          ls -la repo-packager
-
       - name: Echo
-        run: echo "rebuild packages ${{ github.event.client_payload.repo }}"
+        run: echo "rebuild packages ${{ repo }} : ${{ tag }}"
 
       - name: Rebuild packages
         run: python3 scripts/rebuild_packages.py --repo "${{ github.event.client_payload.repo }}" --tag "${{ github.event.client_payload.tag }}"

@@ -17,8 +17,7 @@ def manifest_uses_repo(manifest_path: Path, repo_name: str) -> bool:
     data = json.loads(manifest_path.read_text(encoding="utf-8"))
     for section in ("binaries", "libs", "configs"):
         for item in data.get(section, []):
-            path = item.get("path", "")
-            if repo_name in path:
+            if repo_name in item.get("path", ""):
                 return True
     return False
 
@@ -36,7 +35,6 @@ def main():
         die(f"aucun manifest trouvé dans {SERVERS_DIR}")
 
     matched = []
-
     for manifest_path in manifests:
         if manifest_uses_repo(manifest_path, args.repo):
             matched.append(manifest_path)
@@ -47,7 +45,7 @@ def main():
 
     for manifest_path in matched:
         server_dir = manifest_path.parent
-        print(f"[INFO] rebuild {server_dir.name} avec {manifest_path}")
+        print(f"[INFO] rebuild {server_dir.name}")
 
         subprocess.run(
             [sys.executable, str(PACKAGER), str(manifest_path)],
@@ -59,11 +57,20 @@ def main():
         if not out.exists():
             die(f"package non généré pour {server_dir.name}")
 
-        target = server_dir / f"{args.repo}-{args.tag}.tar.gz"
-        target.parent.mkdir(parents=True, exist_ok=True)
+        # nom explicite : <server>-<repo>-<tag>.tar.gz
+        target = server_dir / f"{server_dir.name}-{args.repo}-{args.tag}.tar.gz"
         out.replace(target)
-
         print(f"[OK] {target}")
+
+    # commit et push tout ce qui a changé dans servers/
+    subprocess.run(["git", "config", "user.email", "ci@github-actions"], cwd=str(ROOT), check=True)
+    subprocess.run(["git", "config", "user.name", "GitHub Actions"], cwd=str(ROOT), check=True)
+    subprocess.run(["git", "add", "servers/"], cwd=str(ROOT), check=True)
+    subprocess.run(
+        ["git", "commit", "-m", f"rebuild packages for {args.repo}@{args.tag}"],
+        cwd=str(ROOT), check=True
+    )
+    subprocess.run(["git", "push"], cwd=str(ROOT), check=True)
 
 if __name__ == "__main__":
     main()
