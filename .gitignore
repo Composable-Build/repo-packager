@@ -2,3 +2,5 @@ build
 output
 work
 .DS_Store
+.venv/
+__pycache__

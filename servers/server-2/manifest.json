@@ -8,6 +8,14 @@
       "path": "artifacts/repo-bin2/binary_two"
     }
   ],
-  "libs": [],
+  "libs": [
+    {
+      "repo": "repo-lib2",
+      "tag": "latest",
+      "asset": "lib2-{tag}.tar.gz",
+      "extract": "lib2",
+      "path": "artifacts/repo-lib2/lib2"
+    }
+  ],
   "configs": []
 }
