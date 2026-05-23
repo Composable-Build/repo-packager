@@ -7,6 +7,7 @@ import sys
 import tarfile
 import urllib.request
 import urllib.error
+from datetime import datetime, timezone
 from pathlib import Path
 
 try:
@@ -49,7 +50,6 @@ def get_all_tags(repo: str, token: str) -> list[str]:
 
 
 def resolve_tag(repo: str, spec: str, token: str) -> str:
-    # version exacte
     if re.match(r'^v?\d+\.\d+\.\d+$', spec):
         return spec
 
@@ -61,38 +61,22 @@ def resolve_tag(repo: str, spec: str, token: str) -> str:
     if not versioned:
         die(f"aucune release trouvée pour {repo}")
 
-    # *  → dernière release
     if spec == "*":
         return versioned[0][0]
-
-    # ^v1.2.3 → même major, >= base
     if spec.startswith("^"):
         base = parse_semver(spec[1:])
-        if base is None:
-            die(f"specifier invalide: {spec}")
         candidates = [t for t, v in versioned if v.major == base.major and v >= base]
-        if not candidates:
-            die(f"aucune version satisfaisant {spec} pour {repo}")
+        if not candidates: die(f"aucune version satisfaisant {spec} pour {repo}")
         return candidates[0]
-
-    # ~v1.2.3 → même major+minor, >= base
     if spec.startswith("~"):
         base = parse_semver(spec[1:])
-        if base is None:
-            die(f"specifier invalide: {spec}")
         candidates = [t for t, v in versioned if v.major == base.major and v.minor == base.minor and v >= base]
-        if not candidates:
-            die(f"aucune version satisfaisant {spec} pour {repo}")
+        if not candidates: die(f"aucune version satisfaisant {spec} pour {repo}")
         return candidates[0]
-
-    # >=v1.2.0
     if spec.startswith(">="):
         base = parse_semver(spec[2:])
-        if base is None:
-            die(f"specifier invalide: {spec}")
         candidates = [t for t, v in versioned if v >= base]
-        if not candidates:
-            die(f"aucune version satisfaisant {spec} pour {repo}")
+        if not candidates: die(f"aucune version satisfaisant {spec} pour {repo}")
         return candidates[0]
 
     die(f"specifier non supporté: {spec}")
@@ -101,33 +85,27 @@ def resolve_tag(repo: str, spec: str, token: str) -> str:
 def resolve_version_for_item(item: dict, trigger_repo: str, trigger_tag: str, token: str) -> str:
     repo = item["repo"]
     spec = item.get("version", "*")
-
     if repo == trigger_repo:
-        # vérifie que le tag du déclencheur satisfait le specifier
         trigger_v = parse_semver(trigger_tag)
-        if spec == "*":
-            return trigger_tag
+        if spec == "*": return trigger_tag
         if re.match(r'^v?\d+\.\d+\.\d+$', spec):
-            if trigger_tag != spec:
-                die(f"{repo}: tag {trigger_tag} ne correspond pas à la version exacte {spec}")
+            if trigger_tag != spec: die(f"{repo}: {trigger_tag} != {spec}")
             return trigger_tag
         if spec.startswith("^") and trigger_v:
             base = parse_semver(spec[1:])
             if trigger_v.major != base.major or trigger_v < base:
-                die(f"{repo}: tag {trigger_tag} ne satisfait pas {spec}")
+                die(f"{repo}: {trigger_tag} ne satisfait pas {spec}")
             return trigger_tag
         if spec.startswith("~") and trigger_v:
             base = parse_semver(spec[1:])
             if trigger_v.major != base.major or trigger_v.minor != base.minor or trigger_v < base:
-                die(f"{repo}: tag {trigger_tag} ne satisfait pas {spec}")
+                die(f"{repo}: {trigger_tag} ne satisfait pas {spec}")
             return trigger_tag
         if spec.startswith(">=") and trigger_v:
             base = parse_semver(spec[2:])
-            if trigger_v < base:
-                die(f"{repo}: tag {trigger_tag} ne satisfait pas {spec}")
+            if trigger_v < base: die(f"{repo}: {trigger_tag} ne satisfait pas {spec}")
             return trigger_tag
         return trigger_tag
-
     return resolve_tag(repo, spec, token)
 
 
@@ -145,7 +123,6 @@ def download_asset(repo: str, tag: str, asset_name: str, dest_dir: Path, token: 
             f.write(resp.read())
     except urllib.error.HTTPError as e:
         die(f"téléchargement échoué ({e.code}): {url}")
-
     if asset_name.endswith(".tar.gz"):
         with tarfile.open(dest_file, "r:gz") as tf:
             tf.extractall(dest_dir)
@@ -161,17 +138,40 @@ def manifest_uses_repo(manifest_path: Path, repo_name: str) -> bool:
     return False
 
 
-def download_all_assets(manifest_path: Path, trigger_repo: str, trigger_tag: str, token: str):
+def download_all_assets(manifest_path: Path, trigger_repo: str, trigger_tag: str, token: str) -> dict:
+    """Télécharge tous les assets et retourne un dict repo -> tag résolu."""
     data = json.loads(manifest_path.read_text(encoding="utf-8"))
+    resolved = {}
     for section in ("binaries", "libs", "configs"):
         for item in data.get(section, []):
             repo = item.get("repo")
             if not repo:
                 continue
             tag = resolve_version_for_item(item, trigger_repo, trigger_tag, token)
+            resolved[repo] = tag
             asset_name = item["asset"].replace("{tag}", tag)
             dest_dir = ROOT / "artifacts" / repo
             download_asset(repo, tag, asset_name, dest_dir, token)
+    return resolved
+
+
+def build_bill_of_materials(manifest_path: Path, resolved: dict, timestamp: str) -> dict:
+    """Construit le récapitulatif des composants inclus."""
+    data = json.loads(manifest_path.read_text(encoding="utf-8"))
+    type_map = {"binaries": "binary", "libs": "lib", "configs": "config"}
+    bom = {"built_at": timestamp, "components": []}
+    for section in ("binaries", "libs", "configs"):
+        for item in data.get(section, []):
+            repo = item.get("repo")
+            if not repo:
+                continue
+            bom["components"].append({
+                "repo": repo,
+                "type": type_map[section],
+                "spec": item.get("version", "*"),
+                "resolved": resolved.get(repo, "unknown"),
+            })
+    return bom
 
 
 def main():
@@ -181,6 +181,10 @@ def main():
     parser.add_argument("--token", required=True)
     args = parser.parse_args()
 
+    # timestamp ISO 8601 UTC, ex: 20260523T212300Z
+    now = datetime.now(timezone.utc)
+    timestamp = now.strftime("%Y%m%dT%H%M%SZ")
+
     if not SERVERS_DIR.is_dir():
         die(f"dossier servers introuvable: {SERVERS_DIR}")
 
@@ -189,42 +193,71 @@ def main():
         die(f"aucun manifest trouvé dans {SERVERS_DIR}")
 
     matched = [m for m in manifests if manifest_uses_repo(m, args.repo)]
-
     if not matched:
         print(f"[INFO] aucun manifest ne référence {args.repo}")
         return
 
     for manifest_path in matched:
         server_dir = manifest_path.parent
-        print(f"[INFO] rebuild {server_dir.name}")
+        server_name = server_dir.name
+        print(f"[INFO] rebuild {server_name}")
 
-        download_all_assets(manifest_path, args.repo, args.tag, args.token)
+        # dossier du build : servers/<server>/<timestamp>/
+        build_dir = server_dir / timestamp
+        build_dir.mkdir(parents=True, exist_ok=True)
 
-        subprocess.run(
+        # téléchargement + résolution des versions
+        resolved = download_all_assets(manifest_path, args.repo, args.tag, args.token)
+
+        # packaging
+        log_lines = []
+        proc = subprocess.run(
             [sys.executable, str(PACKAGER), str(manifest_path)],
-            check=True,
-            cwd=str(ROOT),
+            capture_output=True, text=True, cwd=str(ROOT),
         )
+        log_lines.append(proc.stdout)
+        if proc.returncode != 0:
+            log_lines.append(proc.stderr)
+            (build_dir / "build.log").write_text("\n".join(log_lines), encoding="utf-8")
+            die(f"packager échoué pour {server_name}")
 
+        # sauvegarde du log
+        (build_dir / "build.log").write_text(proc.stdout + proc.stderr, encoding="utf-8")
+
+        # déplacement du package avec nom ISO 8601
         out = ROOT / "output" / "app.tar.gz"
         if not out.exists():
-            die(f"package non généré pour {server_dir.name}")
+            die(f"package non généré pour {server_name}")
 
-        target = server_dir / f"{server_dir.name}-{args.repo}-{args.tag}.tar.gz"
+        package_name = f"{server_name}-{timestamp}.tar.gz"
+        target = build_dir / package_name
         out.replace(target)
         print(f"[OK] {target}")
+
+        # bill of materials (récapitulatif des composants inclus)
+        bom = build_bill_of_materials(manifest_path, resolved, timestamp)
+        bom_path = build_dir / "bom.json"
+        bom_path.write_text(json.dumps(bom, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+        print(f"[BOM] {bom_path}")
+
+        # affichage récap lisible
+        print(f"\n{'─'*50}")
+        print(f"  Package : {package_name}")
+        print(f"  Serveur : {server_name}")
+        print(f"  Date    : {now.strftime('%Y-%m-%d %H:%M:%S UTC')}")
+        print(f"  Composants inclus :")
+        for c in bom["components"]:
+            print(f"    [{c['type']:8s}] {c['repo']:20s} {c['spec']:10s} → {c['resolved']}")
+        print(f"{'─'*50}\n")
 
     # commit et push
     subprocess.run(["git", "config", "user.email", "ci@github-actions"], cwd=str(ROOT), check=True)
     subprocess.run(["git", "config", "user.name", "GitHub Actions"], cwd=str(ROOT), check=True)
     subprocess.run(["git", "add", "servers/"], cwd=str(ROOT), check=True)
-    result = subprocess.run(
-        ["git", "diff", "--cached", "--quiet"],
-        cwd=str(ROOT)
-    )
+    result = subprocess.run(["git", "diff", "--cached", "--quiet"], cwd=str(ROOT))
     if result.returncode != 0:
         subprocess.run(
-            ["git", "commit", "-m", f"rebuild packages for {args.repo}@{args.tag}"],
+            ["git", "commit", "-m", f"rebuild {args.repo}@{args.tag} [{timestamp}]"],
             cwd=str(ROOT), check=True
         )
         subprocess.run(["git", "push"], cwd=str(ROOT), check=True)
