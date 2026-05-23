@@ -151,7 +151,7 @@ def download_all_assets(manifest_path: Path, trigger_repo: str, trigger_tag: str
                 continue
             tag = resolve_version_for_item(item, trigger_repo, trigger_tag, token)
             resolved[repo] = tag
-            asset_name = build_asset_name(item, tag, str(ROOT_BUILD_NUMBER))
+            asset_name = build_asset_name(item, tag, args.build or "")
             dest_dir = ROOT / "artifacts" / repo
             download_asset(repo, tag, asset_name, dest_dir, token)
     return resolved
@@ -181,6 +181,7 @@ def main():
     parser.add_argument("--repo", required=True)
     parser.add_argument("--tag", required=True)
     parser.add_argument("--token", required=True)
+    parser.add_argument("--build", required=False)
     args = parser.parse_args()
 
     # timestamp ISO 8601 UTC, ex: 20260523T212300Z

@@ -9,6 +9,9 @@ on:
       tag:
         required: true
         type: string
+      build:
+        required: false
+        type: string
     secrets:
       PACKAGER_TOKEN:
         required: true
@@ -28,6 +31,6 @@ jobs:
         run: echo "rebuild packages ${{ inputs.repo }}  ${{ inputs.tag }}"
 
       - name: Rebuild packages
-        run: python3 scripts/rebuild_packages.py --repo "${{ inputs.repo }}" --tag "${{ inputs.tag }}" --token "${{ secrets.PACKAGER_TOKEN }}"
+        run: python3 scripts/rebuild_packages.py --repo "${{ inputs.repo }}" --tag "${{ inputs.tag }}" --build "${{ inputs.build }}" --token "${{ secrets.PACKAGER_TOKEN }}"
         working-directory: repo-packager
   
