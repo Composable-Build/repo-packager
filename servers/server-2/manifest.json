@@ -12,9 +12,9 @@
     {
       "repo": "repo-lib2",
       "tag": "latest",
-      "asset": "lib2-{tag}.tar.gz",
-      "extract": "lib2",
-      "path": "artifacts/repo-lib2/lib2"
+      "asset": "plugin_two-{tag}.tar.gz",
+      "extract": "plugin_two",
+      "path": "artifacts/repo-lib2/plugin_two"
     }
   ],
   "configs": []
