@@ -81,7 +81,6 @@ def resolve_tag(repo: str, spec: str, token: str) -> str:
 
     die(f"specifier non supporté: {spec}")
 
-
 def resolve_version_for_item(item: dict, trigger_repo: str, trigger_tag: str, token: str) -> str:
     repo = item["repo"]
     spec = item.get("version", "*")
@@ -137,6 +136,9 @@ def manifest_uses_repo(manifest_path: Path, repo_name: str) -> bool:
                 return True
     return False
 
+def build_asset_name(item: dict, tag: str, build: str) -> str:
+    asset = item["asset"]
+    return asset.replace("{tag}", tag).replace("{build}", build).replace("{version}", tag.lstrip("v"))
 
 def download_all_assets(manifest_path: Path, trigger_repo: str, trigger_tag: str, token: str) -> dict:
     """Télécharge tous les assets et retourne un dict repo -> tag résolu."""
@@ -149,7 +151,7 @@ def download_all_assets(manifest_path: Path, trigger_repo: str, trigger_tag: str
                 continue
             tag = resolve_version_for_item(item, trigger_repo, trigger_tag, token)
             resolved[repo] = tag
-            asset_name = item["asset"].replace("{tag}", tag)
+            asset_name = build_asset_name(item, tag, str(ROOT_BUILD_NUMBER))
             dest_dir = ROOT / "artifacts" / repo
             download_asset(repo, tag, asset_name, dest_dir, token)
     return resolved
