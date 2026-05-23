@@ -34,6 +34,6 @@ jobs:
         run: echo "rebuild packages ${{ github.event.client_payload.repo }}"
 
       - name: Rebuild packages
-        run: python3 repo-packager/scripts/rebuild_packages.py --repo "${{ github.event.client_payload.repo }}" --tag "${{ github.event.client_payload.tag }}"
+        run: python3 scripts/rebuild_packages.py --repo "${{ github.event.client_payload.repo }}" --tag "${{ github.event.client_payload.tag }}"
         working-directory: repo-packager
   
