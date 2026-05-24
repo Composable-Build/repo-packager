@@ -1,5 +1,3 @@
   [bin ] binary_two
 
 created output/app.tar.gz
-
-[ERROR] cannot access local variable 'asset_name' where it is not associated with a value

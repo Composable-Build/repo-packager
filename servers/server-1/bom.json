@@ -4,7 +4,8 @@
       "repo": "repo-bin2",
       "type": "binary",
       "spec": "^v0.1.2",
-      "resolved": "v0.1.11"
+      "resolved": "unknown",
+      "build": "0.1.13.51"
     }
   ]
 }
