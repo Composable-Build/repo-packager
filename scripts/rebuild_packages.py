@@ -169,9 +169,9 @@ def download_all_assets(manifest_path: Path, trigger_repo: str, trigger_tag: str
             if not repo:
                 continue
             tag = resolve_version_for_item(item, trigger_repo, trigger_tag, token)
-            resolved[repo] = {"tag": tag, "asset": asset_name}
             pattern = item["asset"].replace("{tag}", tag)
             asset_name = get_release_asset_name(repo, tag, pattern, token)
+            resolved[repo] = {"tag": tag, "asset": asset_name}
             dest_dir = ROOT / "artifacts" / repo
             download_asset(repo, tag, asset_name, dest_dir, token)
     return resolved
