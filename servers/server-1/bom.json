@@ -4,7 +4,7 @@
       "repo": "repo-bin2",
       "type": "binary",
       "spec": "^v0.1.2",
-      "resolved": "v0.1.10"
+      "resolved": "v0.1.11"
     }
   ]
 }
