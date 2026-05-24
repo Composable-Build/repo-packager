@@ -2,8 +2,8 @@
   "binaries": [
     {
       "repo": "repo-bin2",
-      "tag": "v0.1.2",
-      "asset": "binary_two-0.1.2.*.tar.gz",
+      "version": "^v0.1.2",
+      "asset": "binary_two-*.tar.gz",
       "extract": "binary_two",
       "path": "artifacts/repo-bin2/binary_two"
     }
