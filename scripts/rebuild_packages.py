@@ -148,11 +148,11 @@ def get_release_asset_name(repo: str, tag: str, pattern: str, token: str) -> str
     )
     assets = [a["name"] for a in data.get("assets", [])]
     if not assets:
-        die(f"aucun asset dans la release {repo}@{tag}")
+        raise RuntimeError(f"aucun asset dans la release {repo}@{tag}")
     # pattern peut être "binary_two-*.tar.gz" ou un nom exact
     matches = [a for a in assets if fnmatch.fnmatch(a, pattern)]
     if not matches:
-        die(f"aucun asset ne correspond à '{pattern}' dans {repo}@{tag}. Assets disponibles: {assets}")
+        raise RuntimeError(f"aucun asset ne correspond à '{pattern}' dans {repo}@{tag}. Assets disponibles: {assets}")
     if len(matches) > 1:
         print(f"[WARN] plusieurs assets matchent '{pattern}': {matches} — on prend le premier")
     return matches[0]
