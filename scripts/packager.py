@@ -12,6 +12,7 @@ for d in ["bin", "libs", "conf"]: (work / d).mkdir(parents=True)
 
 data = json.loads(manifest_path.read_text())
 
+errors = 0
 for kind, dest in [("binaries", "bin"), ("libs", "libs"), ("configs", "conf")]:
     for item in data.get(kind, []):
         src = Path(item["path"])
@@ -19,7 +20,11 @@ for kind, dest in [("binaries", "bin"), ("libs", "libs"), ("configs", "conf")]:
             shutil.copy2(src, work / dest / src.name)
             print(f"  [{dest:4s}] {src.name}")
         else:
-            print(f"  [WARN] not found: {src}", file=sys.stderr)
+            print(f"  [ERROR] not found: {src}", file=sys.stderr)
+            errors += 1
+
+if errors:
+    sys.exit(1)
 
 tar_path = outdir / "app.tar.gz"
 with tarfile.open(tar_path, "w:gz") as tf:
