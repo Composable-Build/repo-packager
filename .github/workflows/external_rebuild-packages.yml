@@ -3,7 +3,19 @@ name: Rebuild packages
 on:
   repository_dispatch:
     types: [component-released]
-
+    inputs:
+      repo:
+        required: true
+        type: string
+      tag:
+        required: true
+        type: string
+      build:
+        required: false
+        type: string
+    secrets:
+      PACKAGER_TOKEN:
+        required: true
 jobs:
   rebuild:
     runs-on: ubuntu-latest
@@ -28,4 +40,5 @@ jobs:
               ;;
           esac
       - name: Rebuild packages
-        run: python3 scripts/rebuild_packages.py --repo "${{ github.event.client_payload.repo }}" --tag "${{ github.event.client_payload.tag }}"
+        run: python3 scripts/rebuild_packages.py --repo "${{ inputs.repo }}" --tag "${{ inputs.tag }}" --token "${{ secrets.PACKAGER_TOKEN }}"
+        working-directory: repo-packager

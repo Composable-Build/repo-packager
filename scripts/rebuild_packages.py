@@ -136,10 +136,23 @@ def manifest_uses_repo(manifest_path: Path, repo_name: str) -> bool:
                 return True
     return False
 
-def build_asset_name(item: dict, tag: str, build: str) -> str:
-    asset = item["asset"]
-    return asset.replace("{tag}", tag).replace("{build}", build).replace("{version}", tag.lstrip("v"))
-
+def get_release_asset_name(repo: str, tag: str, pattern: str, token: str) -> str:
+    """Résout le vrai nom de l'asset via l'API GitHub en matchant un glob pattern."""
+    import fnmatch
+    data = github_get(
+        f"https://api.github.com/repos/{ORG}/{repo}/releases/tags/{tag}", token
+    )
+    assets = [a["name"] for a in data.get("assets", [])]
+    if not assets:
+        die(f"aucun asset dans la release {repo}@{tag}")
+    # pattern peut être "binary_two-*.tar.gz" ou un nom exact
+    matches = [a for a in assets if fnmatch.fnmatch(a, pattern)]
+    if not matches:
+        die(f"aucun asset ne correspond à '{pattern}' dans {repo}@{tag}. Assets disponibles: {assets}")
+    if len(matches) > 1:
+        print(f"[WARN] plusieurs assets matchent '{pattern}': {matches} — on prend le premier")
+    return matches[0]
+    
 def download_all_assets(manifest_path: Path, trigger_repo: str, trigger_tag: str, token: str) -> dict:
     """Télécharge tous les assets et retourne un dict repo -> tag résolu."""
     data = json.loads(manifest_path.read_text(encoding="utf-8"))
@@ -151,7 +164,8 @@ def download_all_assets(manifest_path: Path, trigger_repo: str, trigger_tag: str
                 continue
             tag = resolve_version_for_item(item, trigger_repo, trigger_tag, token)
             resolved[repo] = tag
-            asset_name = build_asset_name(item, tag, args.build or "")
+            pattern = item["asset"].replace("{tag}", tag)
+            asset_name = get_release_asset_name(repo, tag, pattern, token)
             dest_dir = ROOT / "artifacts" / repo
             download_asset(repo, tag, asset_name, dest_dir, token)
     return resolved
