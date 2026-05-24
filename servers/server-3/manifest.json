@@ -1,0 +1,28 @@
+{
+  "binaries": [
+    {
+      "repo": "repo-bin2",
+      "version": "v0.1.2",
+      "asset": "binary_two-*.tar.gz",
+      "extract": "binary_two",
+      "path": "artifacts/repo-bin2/binary_two"
+    }
+  ],
+  "libs": [
+    {
+      "repo": "repo-lib1",
+      "version": "*",
+      "asset": "plugin_one-*.tar.gz",
+      "extract": "plugin_one",
+      "path": "artifacts/repo-lib1/plugin_one"
+    },
+    {
+      "repo": "repo-lib2",
+      "version": "^1.0.1",
+      "asset": "plugin_two-*.tar.gz",
+      "extract": "plugin_two",
+      "path": "artifacts/repo-lib2/plugin_two"
+    }
+  ],
+  "configs": []
+}

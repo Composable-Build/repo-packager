@@ -236,8 +236,9 @@ def main():
 
             bom = build_bill_of_materials(manifest_path, resolved)
             bom_file.write_text(json.dumps(bom, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+            log_file.write_text(proc.stdout + proc.stderr, encoding="utf-8")
+            
             print(f"[BOM] {bom_file}")
-
             print(f"[LOG] {log_file}")
 
             print(f"\n{'─'*50}")
@@ -250,6 +251,7 @@ def main():
 
         except VersionMismatch as e:
             print(f"[SKIP] {server_name}: {e}")
+            continue  # pas de log, pas de touche aux fichiers existants
         except subprocess.CalledProcessError as e:
             with log_file.open("a", encoding="utf-8") as f:
                 f.write(f"\n[ERROR] {e}\n")
