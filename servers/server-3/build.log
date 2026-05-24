@@ -1,5 +1,7 @@
   [bin ] binary_two
+  [ERROR] not found: artifacts/repo-lib1/plugin_one
+  [ERROR] not found: artifacts/repo-lib2/plugin_two
 
-created output/app.tar.gz
-  [WARN] not found: artifacts/repo-lib1/plugin_one
-  [WARN] not found: artifacts/repo-lib2/plugin_two
+[ERROR] packager échoué pour server-3
+
+[ERROR] packager échoué pour server-3
