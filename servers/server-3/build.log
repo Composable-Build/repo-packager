@@ -1,0 +1,5 @@
+  [bin ] binary_two
+
+created output/app.tar.gz
+  [WARN] not found: artifacts/repo-lib1/plugin_one
+  [WARN] not found: artifacts/repo-lib2/plugin_two
