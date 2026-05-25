@@ -18,6 +18,8 @@ except ImportError:
 ROOT = Path(__file__).resolve().parents[1]
 SERVERS_DIR = ROOT / "servers"
 PACKAGER = ROOT / "scripts" / "packager.py"
+LOGS_DIR = ROOT / "logs"
+
 ORG = "Composable-Build"
 
 def die(msg, code=1):
@@ -208,6 +210,8 @@ def main():
 
     if not SERVERS_DIR.is_dir():
         die(f"dossier servers introuvable: {SERVERS_DIR}")
+    
+    LOGS_DIR.mkdir(parents=True, exist_ok=True)
 
     manifests = sorted(SERVERS_DIR.glob("*/manifest.json"))
     if not manifests:
@@ -226,6 +230,7 @@ def main():
         log_file = server_dir / "build.log"
         package_file = server_dir / f"{server_name}.tar.gz"
         bom_file = server_dir / "bom.json"
+        error_log = LOGS_DIR / f"{server_name}-{args.repo}-{args.tag}.log"
 
         try:
             resolved = download_all_assets(manifest_path, args.repo, args.tag, args.token)
@@ -242,7 +247,7 @@ def main():
 
             out = ROOT / "output" / "app.tar.gz"
             if not out.exists():
-                raise RuntimeError(f"package non généré pour {server_name}")
+`                raise RuntimeError(f"package non généré pour {server_name}")
 
             out.replace(package_file)
             print(f"[OK] {package_file}")
@@ -269,10 +274,13 @@ def main():
             with log_file.open("a", encoding="utf-8") as f:
                 f.write(f"\n[ERROR] {e}\n")
             print(f"[ERROR] {server_name}: packager a échoué (exit {e.returncode})", file=sys.stderr)
+            log_file.rename(error_log)
         except Exception as e:
             with log_file.open("a", encoding="utf-8") as f:
                 f.write(f"\n[ERROR] {e}\n")
             print(f"[ERROR] {server_name}: {e}", file=sys.stderr)
+            log_file.rename(error_log)
+
 
     subprocess.run(["git", "config", "user.email", "ci@github-actions"], cwd=str(ROOT), check=True)
     subprocess.run(["git", "config", "user.name", "GitHub Actions"], cwd=str(ROOT), check=True)
