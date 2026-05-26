@@ -162,6 +162,13 @@ def get_release_asset_name(repo: str, tag: str, pattern: str, token: str) -> str
     matches.sort(key=sort_key)
     return matches[-1]  # dernier = version la plus haute
 
+def validate_spec(repo: str, spec: str):
+    if not VALID_SPECS.match(spec):
+        raise RuntimeError(
+            f"[CONFIG] spec invalide '{spec}' pour {repo}. "
+            f"Formats acceptés : *, v1.2.3, ^v1.2.3, ~v1.2.3, >=v1.2.3"
+        )
+
 def download_all_assets(manifest_path: Path, trigger_repo: str, trigger_tag: str, token: str) -> dict:
     data = json.loads(manifest_path.read_text(encoding="utf-8"))
     resolved = {}
@@ -170,6 +177,8 @@ def download_all_assets(manifest_path: Path, trigger_repo: str, trigger_tag: str
             repo = item.get("repo")
             if not repo:
                 continue
+            spec = item.get("version", "*")
+            validate_spec(repo, spec)
             tag = resolve_version_for_item(item, trigger_repo, trigger_tag, token)
             pattern = item["asset"].replace("{tag}", tag)
             asset_name = get_release_asset_name(repo, tag, pattern, token)
