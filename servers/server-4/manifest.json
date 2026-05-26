@@ -1,13 +1,13 @@
 {
   "binaries": [
     {
-      "repo": "repo-bin2",
-      "version": "^v1.1.0",
       "asset": "binary_two-*.tar.gz",
       "extract": "binary_two",
-      "path": "artifacts/repo-bin2/binary_two"
+      "path": "artifacts/repo-bin2/binary_two",
+      "repo": "repo-bin2",
+      "version": "^v1.1.0"
     }
   ],
-  "libs": [],
-  "configs": []
+  "configs": [],
+  "libs": []
 }
