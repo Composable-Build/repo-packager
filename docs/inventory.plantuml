@@ -1,0 +1,22 @@
+@startuml
+left to right direction
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam ArrowColor #2D6CDF
+skinparam RectangleBorderColor #2D6CDF
+skinparam RectangleBackgroundColor #EEF5FF
+
+rectangle "Script 1\nvérifie device A" as A1
+rectangle "Script 2\nvérifie device B" as A2
+rectangle "Script 3\nvérifie device C" as A3
+rectangle "Agrégation inventaire" as B
+rectangle "inventaire.yml/json" as C
+rectangle "build manifest" as D
+
+A1 --> B
+A2 --> B
+A3 --> B
+B --> C
+C --> D : manifest.json
+
+@enduml
