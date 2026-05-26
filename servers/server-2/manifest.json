@@ -1,13 +1,43 @@
 {
   "binaries": [
     {
-      "asset": "binary_two-*.tar.gz",
+      "asset": "binary_two-*-linux-x86_64.tar.gz",
       "extract": "binary_two",
-      "path": "artifacts/repo-bin2/binary_two",
+      "name": "binary_two",
+      "path": "binaries/binary_two",
       "repo": "repo-bin2",
+      "sha256": "__computed_at_build__",
       "version": "v0.1.2"
     }
   ],
-  "configs": [],
-  "libs": []
+  "configs": [
+    {
+      "arch": "x86_64",
+      "cpu": "intel",
+      "endian": "little",
+      "libc": "glibc",
+      "os": "linux"
+    }
+  ],
+  "firmwares": [
+    {
+      "asset": "peripheral-can-device-*-cortex-m4.bin",
+      "can_id": "0x124",
+      "name": "peripheral-can-device",
+      "path": "firmwares/peripheral-can-device",
+      "repo": "repo-can-firmware",
+      "sha256": "__computed_at_build__",
+      "transport": "can",
+      "version": "^v1.0.0"
+    }
+  ],
+  "libs": [],
+  "target": {
+    "arch": "x86_64",
+    "cpu": "intel",
+    "endian": "little",
+    "hostname": "server-2",
+    "libc": "glibc",
+    "os": "linux"
+  }
 }
