@@ -1,0 +1,68 @@
+@startuml
+!theme mars
+
+skinparam backgroundColor transparent
+skinparam componentStyle rectangle
+
+package "Usine Logicielle (Repos Applicatifs)" {
+    [repo-bin1]
+    [repo-bin2]
+    [repo-lib1]
+    [repo-lib2]
+    [repo-firm1]
+    [repo-firm2]
+}
+
+node "Pipeline CI (Action GitHub)" as CI {
+    [Build]
+    [Tests]
+    [Génération d'Artefacts]
+}
+
+cloud "Registre d'Artefacts" as Registry {
+    [Release vX.Y.Z]
+}
+
+package "Orchestrateur de Déploiement (repo-packager)" {
+    [Script de Notification]
+    [Script de Repackaging]
+    
+    database "Inventaire Serveurs (Manifests)" as Manifests {
+        [manifest_server_A.json]
+        [manifest_server_B.json]
+    }
+    
+    [Moteur SemVer (Résolution de dépendances)]
+}
+
+folder "Livrables finaux" as Livrables {
+    [Archive update-server_A.tar.gz]
+    [Build Log]
+    [BOM (Bill of Materials)]
+}
+
+' Flux Commit Simple
+[repo-bin1] ..> [Build] : Commit (pas de tag)
+[Build] -> [Tests]
+[Tests] -[#red]X : Si échec : Stop
+
+' Flux Tag / Release
+[repo-bin2] --> [Build] : Nouveau Tag (Release)
+[Build] -> [Tests]
+[Tests] --> [Génération d'Artefacts] : Succès
+[Génération d'Artefacts] --> Registry : Publish artefact
+
+' Déclenchement Packager
+Registry --> [Script de Notification] : Webhook / API Call
+[Script de Notification] --> [Script de Repackaging] : Déclenche le flux
+
+' Logique interne Packager
+[Script de Repackaging] --> Manifests : Scanne tous les serveurs
+Manifests --> [Moteur SemVer (Résolution de dépendances)] : Extrait les versions requises
+[Moteur SemVer (Résolution de dépendances)] --> [Script de Repackaging] : Identifie "server_A" comme cible éligible
+
+' Action finale
+[Script de Repackaging] --> Registry : Télécharge les artefacts ciblés
+[Script de Repackaging] --> Livrables : Construit le bundle & logs
+
+@enduml
