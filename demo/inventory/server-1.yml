@@ -1,21 +1,22 @@
 hostname: server-1
-cpu: arm-cortex-a72
+cpu: arm
 arch: aarch64
 os: linux
+libc: glibc
+endian: little
 
 devices:
   - name: binary_two
+    type: binary
     repo: repo-bin2
     version: "^v0.1.0"
-    asset: "binary_two-*.tar.gz"
     extract: binary_two
     path: artifacts/repo-bin2/binary_two
-    type: binary
 
-  - name: plugin_two
-    repo: repo-lib2
+  - name: peripheral-can-device
+    type: firmware
+    repo: repo-can-firmware
     version: "^v1.0.0"
-    asset: "plugin_two-*.tar.gz"
-    extract: plugin_two
-    path: artifacts/repo-lib2/plugin_two
-    type: lib
+    mcu: cortex-m4
+    transport: can
+    can_id: "0x123"

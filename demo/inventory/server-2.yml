@@ -1,13 +1,22 @@
 hostname: server-2
-cpu: intel-x86_64
+cpu: intel
 arch: x86_64
 os: linux
+libc: glibc
+endian: little
 
 devices:
   - name: binary_two
+    type: binary
     repo: repo-bin2
     version: "v0.1.2"
-    asset: "binary_two-*.tar.gz"
     extract: binary_two
     path: artifacts/repo-bin2/binary_two
-    type: binary
+
+  - name: peripheral-can-device
+    type: firmware
+    repo: repo-can-firmware
+    version: "^v1.0.0"
+    mcu: cortex-m4
+    transport: can
+    can_id: "0x124"
