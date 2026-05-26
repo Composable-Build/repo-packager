@@ -1,0 +1,13 @@
+hostname: server-3
+cpu: arm-cortex-a53
+arch: aarch64
+os: linux
+
+devices:
+  - name: binary_two
+    repo: repo-bin2
+    version: "v0.1.2"
+    asset: "binary_two-*.tar.gz"
+    extract: binary_two
+    path: artifacts/repo-bin2/binary_two
+    type: binary

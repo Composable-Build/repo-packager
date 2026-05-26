@@ -1,0 +1,13 @@
+hostname: server-4
+cpu: risc-v
+arch: riscv64
+os: linux
+
+devices:
+  - name: binary_two
+    repo: repo-bin2
+    version: "^v1.1.0"
+    asset: "binary_two-*.tar.gz"
+    extract: binary_two
+    path: artifacts/repo-bin2/binary_two
+    type: binary
