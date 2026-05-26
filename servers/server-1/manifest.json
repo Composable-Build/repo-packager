@@ -2,12 +2,20 @@
   "binaries": [
     {
       "repo": "repo-bin2",
-      "version": "^v0.1.2",
+      "version": "^v0.1.0",
       "asset": "binary_two-*.tar.gz",
       "extract": "binary_two",
       "path": "artifacts/repo-bin2/binary_two"
     }
   ],
-  "libs": [],
+  "libs": [
+    {
+      "repo": "repo-lib2",
+      "version": "^v1.0.0",
+      "asset": "plugin_two-*.tar.gz",
+      "extract": "plugin_two",
+      "path": "artifacts/repo-lib2/plugin_two"
+    }
+  ],
   "configs": []
 }
