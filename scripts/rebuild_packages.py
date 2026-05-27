@@ -205,7 +205,7 @@ def build_bill_of_materials(manifest_path: Path, resolved: dict) -> dict:
                 "repo": repo,
                 "type": type_map[section],
                 "spec": item.get("version", "*"),
-                "resolved": resolved.get("tag", "unknown"),
+                # "resolved": resolved.get("tag", "unknown"),
                 "build": full_version,
             })
     return bom
@@ -273,7 +273,7 @@ def main():
             print(f"  Serveur : {server_name}")
             print(f"  Composants inclus :")
             for c in bom["components"]:
-                print(f"    [{c['type']:8s}] {c['repo']:20s} {c['spec']:10s} → {c['resolved']}")
+                print(f"    [{c['type']:8s}] {c['repo']:20s} {c['spec']:10s} → {c['build']}")
             print(f"{'─'*50}\n")
 
         except VersionMismatch as e:
