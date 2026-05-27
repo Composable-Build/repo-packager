@@ -256,7 +256,7 @@ def main():
 
             out = ROOT / "output" / "app.tar.gz"
             if not out.exists():
-`                raise RuntimeError(f"package non généré pour {server_name}")
+                raise RuntimeError(f"package non généré pour {server_name}")
 
             out.replace(package_file)
             print(f"[OK] {package_file}")
