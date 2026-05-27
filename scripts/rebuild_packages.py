@@ -19,7 +19,7 @@ ROOT = Path(__file__).resolve().parents[1]
 SERVERS_DIR = ROOT / "servers"
 PACKAGER = ROOT / "scripts" / "packager.py"
 LOGS_DIR = ROOT / "logs"
-VALID_SPECS = = re.compile(r'^(\*|v?\d+\.\d+\.\d+|\^v?\d+\.\d+\.\d+|~v?\d+\.\d+\.\d+|>=v?\d+\.\d+\.\d+)$')
+VALID_SPECS = re.compile(r'^(\*|v?\d+\.\d+\.\d+|\^v?\d+\.\d+\.\d+|~v?\d+\.\d+\.\d+|>=v?\d+\.\d+\.\d+)$')
 ORG = "Composable-Build"
 
 def die(msg, code=1):
