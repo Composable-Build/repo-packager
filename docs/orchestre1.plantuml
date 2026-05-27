@@ -1,0 +1,71 @@
+@startuml
+!theme mars
+
+skinparam backgroundColor transparent
+skinparam componentStyle rectangle
+
+package "Repos Logiciels (sous contrôle)" {
+    [repo-bin1]
+    [repo-bin2]
+    [repo-lib1]
+    [repo-firm1]
+}
+
+package "Repos Tiers (hors contrôle)" {
+    [repo-lib2-tiers]
+    [repo-firm2-tiers]
+}
+
+node "Pipeline CI — Repo Logiciel" as CI {
+    [Build]
+    [Tests]
+    [Génération d'une release]
+    [GHA : notify-packager.yml]
+}
+
+node "Pipeline CD — repo-packager" as PackagerCI {
+    [GHA : repackage-dispatch.yml]
+    [Script de Repackaging (Python)]
+
+    database "Inventaire Serveurs (Manifests)" as Manifests {
+        [manifest_server_A.yml]
+        [manifest_server_B.yml]
+    }
+
+    [Moteur SemVer]
+}
+
+folder "Livrables finaux" as Livrables {
+    [update-server_A.tar.gz]
+    [build.log]
+    [BOM (Bill of Materials)]
+}
+
+' --- Flux Commit Simple (sans tag) ---
+[repo-bin1] ..> [Build] : Commit\n(sans tag)
+[Build] ..> [Tests]
+[Tests] -[#red]X : Échec : Stop
+
+' --- Flux Tag / Release (repos sous contrôle) ---
+[repo-bin2] --> [Build] : Nouveau Tag\n(Release)
+[Build] -> [Tests]
+[Tests] --> [Génération d'une release] : Succès
+[Génération d'une release] --> [GHA : notify-packager.yml] : Déclenche notification
+
+' --- Notification vers repo-packager ---
+[GHA : notify-packager.yml] --> [GHA : repackage-dispatch.yml] : repository_dispatch\n(GitHub API)
+
+' --- Logique interne repo-packager ---
+[GHA : repackage-dispatch.yml] --> [Script de Repackaging (Python)] : Appel script
+[Script de Repackaging (Python)] --> Manifests : Scanne tous les serveurs
+Manifests --> [Moteur SemVer] : Extrait contraintes de version
+[Moteur SemVer] --> [Script de Repackaging (Python)] : Identifie server_A éligible
+
+' --- Téléchargement direct depuis les repos ---
+[Script de Repackaging (Python)] --> [repo-bin2] : Télécharge release GitHub\ncorrespondante
+[Script de Repackaging (Python)] --> [repo-lib2-tiers] : Télécharge release GitHub\ncorrespondante
+
+' --- Livraison finale ---
+[Script de Repackaging (Python)] --> Livrables : Construit bundle + logs
+
+@enduml
